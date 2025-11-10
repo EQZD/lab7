@@ -1,26 +1,23 @@
 package lab6.crm.service;
 
-import lab6.crm.entity.ApplicationRequest;
+import lab6.crm.dto.OperatorDto;
 import lab6.crm.entity.Operators;
-import lab6.crm.repository.ApplicationRequestRepository; // <-- Новый импорт
 import lab6.crm.repository.OperatorsRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OperatorsService {
 
     private final OperatorsRepository repository;
-    private final ApplicationRequestRepository requestRepository; // <-- Внедряем репозиторий Заявок
 
-    public OperatorsService(OperatorsRepository repository, ApplicationRequestRepository requestRepository) {
+    public OperatorsService(OperatorsRepository repository) {
         this.repository = repository;
-        this.requestRepository = requestRepository;
     }
 
-
-    public List<Operators> getAll() {
+    public List<Operators> getAllEntities() {
         return repository.findAll();
     }
 
@@ -28,32 +25,67 @@ public class OperatorsService {
         return repository.findAllById(ids);
     }
 
-    public Operators getById(Long id) {
-        return repository.findById(id).orElse(null);
-    }
-
-    public Operators save(Operators operator) {
-        return repository.save(operator);
+    public void save(Operators operator) {
+        repository.save(operator);
     }
 
     public void delete(Long id) {
-        Operators operatorToDelete = repository.findById(id).orElse(null);
+        repository.deleteById(id);
+    }
 
-        if (operatorToDelete != null) {
+    public Operators getEntityById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
 
-            List<ApplicationRequest> relatedRequests = operatorToDelete.getRequests();
+    public List<OperatorDto> getAll() {
+        return repository.findAll()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
 
-            for (ApplicationRequest req : relatedRequests) {
-                req.getOperators().remove(operatorToDelete);
+    public OperatorDto getById(Long id) {
+        return repository.findById(id)
+                .map(this::toDto)
+                .orElse(null);
+    }
 
-                if (req.getOperators().isEmpty()) {
-                    req.setHandled(false);
-                }
+    public OperatorDto create(OperatorDto dto) {
+        Operators entity = toEntity(dto);
+        entity.setId(null); // на всякий случай
+        Operators saved = repository.save(entity);
+        return toDto(saved);
+    }
 
-                requestRepository.save(req);
-            }
+    public OperatorDto update(Long id, OperatorDto dto) {
+        return repository.findById(id)
+                .map(existing -> {
+                    existing.setName(dto.getName());
+                    existing.setSurname(dto.getSurname());
+                    existing.setDepartment(dto.getDepartment());
+                    Operators saved = repository.save(existing);
+                    return toDto(saved);
+                })
+                .orElse(null);
+    }
 
-            repository.deleteById(id);
-        }
+    public OperatorDto toDto(Operators entity) {
+        if (entity == null) return null;
+        OperatorDto dto = new OperatorDto();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setSurname(entity.getSurname());
+        dto.setDepartment(entity.getDepartment());
+        return dto;
+    }
+
+    public Operators toEntity(OperatorDto dto) {
+        if (dto == null) return null;
+        Operators entity = new Operators();
+        entity.setId(dto.getId());
+        entity.setName(dto.getName());
+        entity.setSurname(dto.getSurname());
+        entity.setDepartment(dto.getDepartment());
+        return entity;
     }
 }

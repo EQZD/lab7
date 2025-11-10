@@ -1,9 +1,8 @@
 package lab6.crm.controller;
 
-import lab6.crm.entity.ApplicationRequest;
-import lab6.crm.entity.Operators;
-import lab6.crm.service.ApplicationRequestService;
+import lab6.crm.dto.OperatorDto;
 import lab6.crm.service.OperatorsService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,48 +13,44 @@ import java.util.List;
 public class OperatorsRestController {
 
     private final OperatorsService operatorsService;
-    private final ApplicationRequestService requestService;
 
-    public OperatorsRestController(OperatorsService operatorsService,
-                                   ApplicationRequestService requestService) {
+    public OperatorsRestController(OperatorsService operatorsService) {
         this.operatorsService = operatorsService;
-        this.requestService = requestService;
     }
 
     @GetMapping
-    public List<Operators> getAll() {
+    public List<OperatorDto> getAll() {
         return operatorsService.getAll();
     }
 
-    @PostMapping
-    public ResponseEntity<Operators> create(@RequestBody Operators operator) {
-        operatorsService.save(operator);
-        return ResponseEntity.ok(operator);
+    @GetMapping("/{id}")
+    public ResponseEntity<OperatorDto> getById(@PathVariable Long id) {
+        OperatorDto dto = operatorsService.getById(id);
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(dto);
     }
 
-    @PutMapping("/{id}/assign/{requestId}")
-    public ResponseEntity<ApplicationRequest> assignToRequest(@PathVariable Long id,
-                                                              @PathVariable Long requestId) {
-        Operators operator = operatorsService.getById(id);
-        if (operator == null) {
+    @PostMapping
+    public ResponseEntity<OperatorDto> create(@RequestBody OperatorDto dto) {
+        OperatorDto created = operatorsService.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<OperatorDto> update(@PathVariable Long id,
+                                              @RequestBody OperatorDto dto) {
+        OperatorDto updated = operatorsService.update(id, dto);
+        if (updated == null) {
             return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.ok(updated);
+    }
 
-        ApplicationRequest request = requestService.getById(requestId);
-        if (request == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        if (!request.getOperators().contains(operator)) {
-            request.getOperators().add(operator);
-        }
-
-        if (!operator.getRequests().contains(request)) {
-            operator.getRequests().add(request);
-        }
-
-        requestService.save(request);
-
-        return ResponseEntity.ok(request);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        operatorsService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

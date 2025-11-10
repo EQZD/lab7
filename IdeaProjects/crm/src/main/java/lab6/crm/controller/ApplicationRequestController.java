@@ -53,7 +53,7 @@ public class ApplicationRequestController {
     public String assign(@PathVariable Long id, @RequestParam List<Long> operatorIds) {
         ApplicationRequest req = requestService.getById(id);
         List<Operators> selected = operatorsService.getAllByIds(operatorIds);
-        req.getOperators().addAll(selected); // теперь getOperators() точно есть
+        req.getOperators().addAll(selected);
         req.setHandled(true);
         requestService.save(req);
         return "redirect:/requests";

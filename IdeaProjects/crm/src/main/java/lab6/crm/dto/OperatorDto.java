@@ -1,27 +1,16 @@
-package lab6.crm.entity;
+package lab6.crm.dto;
 
-import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+public class OperatorDto {
 
-@Entity
-public class Operators {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
     private String surname;
     private String department;
 
-    @ManyToMany(mappedBy = "operators")
-    private List<ApplicationRequest> requests = new ArrayList<>();
-
-    public Operators() {
+    public OperatorDto() {
     }
 
-    public Operators(Long id, String name, String surname, String department) {
+    public OperatorDto(Long id, String name, String surname, String department) {
         this.id = id;
         this.name = name;
         this.surname = surname;
@@ -58,13 +47,5 @@ public class Operators {
 
     public void setDepartment(String department) {
         this.department = department;
-    }
-
-    public List<ApplicationRequest> getRequests() {
-        return requests;
-    }
-
-    public void setRequests(List<ApplicationRequest> requests) {
-        this.requests = requests;
     }
 }
